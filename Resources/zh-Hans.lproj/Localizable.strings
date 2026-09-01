@@ -1,0 +1,6 @@
+"Folder" = "文件夹";
+"Search" = "搜索应用";
+"Settings" = "设置";
+"Could not open “%@”" = "无法打开“%@”";
+"Your icon layout could not be written to disk. Check the available disk space." = "图标布局无法保存到磁盘，请检查可用空间。";
+"Could not save the layout" = "无法保存布局";
