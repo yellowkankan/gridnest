@@ -13,7 +13,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         if window == nil {
             let host = NSHostingController(rootView: SettingsView(actions: actions))
             let w = NSWindow(contentViewController: host)
-            w.title = "位置启动器设置"
+            w.title = "GridNest 设置"
             w.styleMask = [.titled, .closable, .resizable]
             w.isReleasedWhenClosed = false
             w.delegate = self

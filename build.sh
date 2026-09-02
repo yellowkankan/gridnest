@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 BUILD="$ROOT/build"
-APP="$BUILD/PositionLauncher.app"
+APP="$BUILD/GridNest.app"
 MIN_OS="26.0"
 ARCHS="arm64"
 
@@ -22,7 +22,7 @@ done
 
 slices=()
 for arch in $ARCHS; do
-    out="$BUILD/PositionLauncher-$arch"
+    out="$BUILD/GridNest-$arch"
     echo "==> Compiling $arch slice"
     if swiftc \
         -swift-version 5 \
@@ -46,9 +46,9 @@ if [ "${#slices[@]}" -eq 0 ]; then
 fi
 
 echo "==> Creating universal binary (${#slices[@]} slice(s))"
-lipo -create -output "$APP/Contents/MacOS/PositionLauncher" "${slices[@]}"
+lipo -create -output "$APP/Contents/MacOS/GridNest" "${slices[@]}"
 rm -f "${slices[@]}"
-lipo -info "$APP/Contents/MacOS/PositionLauncher"
+lipo -info "$APP/Contents/MacOS/GridNest"
 
 # Sign with a real identity by exporting CODESIGN_IDENTITY, e.g.
 #   CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./build.sh
