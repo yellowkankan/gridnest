@@ -771,7 +771,19 @@ struct LauncherView: View {
             // not vertically centered.
             ZStack(alignment: .top) {
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.primary.opacity(colorScheme == .dark ? 0.18 : 0.12))
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(LinearGradient(
+                                colors: [Color.white.opacity(colorScheme == .dark ? 0.16 : 0.24),
+                                         Color.accentColor.opacity(0.10),
+                                         Color.black.opacity(colorScheme == .dark ? 0.10 : 0.03)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing))
+                    }
+                    .overlay(RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(colorScheme == .dark ? 0.28 : 0.42), lineWidth: 1))
+                    .shadow(color: .black.opacity(colorScheme == .dark ? 0.24 : 0.12), radius: 10, y: 5)
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3),
                           spacing: 4) {
                     ForEach(model.previewIcons(folder)) { app in
@@ -936,6 +948,35 @@ private struct NativeGlassBackground: NSViewRepresentable {
     }
 }
 
+/// A within-window material can blur the active launcher content behind a
+/// folder, unlike the main window's behind-window material.
+private struct FolderGlassEffect: NSViewRepresentable {
+    let material: NSVisualEffectView.Material
+    let mode: String
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = .withinWindow
+        view.state = .active
+        applyAppearance(view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+        applyAppearance(nsView)
+    }
+
+    private func applyAppearance(_ view: NSVisualEffectView) {
+        switch mode {
+        case "light": view.appearance = NSAppearance(named: .aqua)
+        case "dark": view.appearance = NSAppearance(named: .darkAqua)
+        default: view.appearance = nil
+        }
+    }
+}
+
 // MARK: - Folder overlay
 
 private struct FolderOverlay: View {
@@ -952,6 +993,7 @@ private struct FolderOverlay: View {
     @State private var name: String = ""
     @FocusState private var nameFocused: Bool
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("appearanceMode") private var appearanceMode = "system"
 
     @State private var dragPath: String?
     @State private var dragPoint: CGPoint = .zero
@@ -975,7 +1017,11 @@ private struct FolderOverlay: View {
         ZStack {
             // Kept mounted (faded out) during a drag-out so the active drag
             // gesture — which dies with its view — survives until the drop.
-            Color.black.opacity(draggedOut ? 0 : (colorScheme == .dark ? 0.45 : 0.25))
+            FolderGlassEffect(material: .underWindowBackground, mode: appearanceMode)
+                .ignoresSafeArea()
+                .opacity(draggedOut ? 0 : 0.82)
+                .allowsHitTesting(false)
+            Color.black.opacity(draggedOut ? 0 : (colorScheme == .dark ? 0.16 : 0.08))
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { if dragPath == nil { model.openFolderID = nil } }
@@ -994,9 +1040,21 @@ private struct FolderOverlay: View {
 
                     folderGrid(folder)
                 }
-                .padding(34)
+                .padding(36)
                 .frame(maxWidth: 760)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28))
+                .background {
+                    FolderGlassEffect(material: .hudWindow, mode: appearanceMode)
+                        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .stroke(LinearGradient(
+                            colors: [Color.white.opacity(colorScheme == .dark ? 0.34 : 0.52),
+                                     Color.white.opacity(colorScheme == .dark ? 0.12 : 0.20)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing), lineWidth: 1)
+                }
+                .shadow(color: .black.opacity(colorScheme == .dark ? 0.32 : 0.16), radius: 28, y: 14)
                 .background(GeometryReader { g -> Color in
                     let f = g.frame(in: .named("folderRoot"))
                     DispatchQueue.main.async { panelFrame = f }
